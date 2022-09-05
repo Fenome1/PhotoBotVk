@@ -1,40 +1,38 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
+using PhotoBotVk.Data;
 using VkNet;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Exception;
 using VkNet.Model;
 using VkNet.Model.RequestParams;
-using Data;
-using System.Threading;
 
 namespace PhotoBotVk
 {
     internal sealed class BotManager
     {
-        private VkApi vkApi = new VkApi();
-        private User user = new User();
+        private readonly User _user = new();
+        private readonly VkApi _vkApi = new();
 
         public BotManager()
         {
-            vkApi.Authorize(new ApiAuthParams
+            _vkApi.Authorize(new ApiAuthParams
             {
-                AccessToken = Data.Token
+                AccessToken = Data.Data.Token
             });
-            Console.WriteLine($"Статус авторизации: {vkApi.IsAuthorized}");
+            Console.WriteLine($"Статус авторизации: {_vkApi.IsAuthorized}");
         }
+
         public void StartMessageHandling()
         {
-
-            var server = vkApi.Groups.GetLongPollServer(Data.GroupId);
+            var server = _vkApi.Groups.GetLongPollServer(Data.Data.GroupId);
             var ts = server.Ts;
 
             while (true)
-            {
                 try
                 {
-                    var poll = vkApi.Groups.GetBotsLongPollHistory(new BotsLongPollHistoryParams
+                    var poll = _vkApi.Groups.GetBotsLongPollHistory(new BotsLongPollHistoryParams
                     {
                         Key = server.Key,
                         Server = server.Server,
@@ -48,83 +46,84 @@ namespace PhotoBotVk
                     ts = poll.Ts;
 
 
-                    foreach (var ivent in poll.Updates)
-                    {
+                    foreach (var update in poll.Updates)
                         ThreadPool.QueueUserWorkItem(_ =>
                         {
-                            if (ivent.Type == GroupUpdateType.MessageNew)
+                            if (update.Type == GroupUpdateType.MessageNew)
                             {
-                                user.UserMessage = ivent.MessageNew.Message.Text.ToLower();
-                                user.UserId = ivent.MessageNew.Message.UserId;
-                                user.PeerId = ivent.MessageNew.Message.PeerId;
+                                _user.UserMessage = update.MessageNew.Message.Text.ToLower();
+                                _user.UserId = update.MessageNew.Message.UserId;
+                                _user.PeerId = update.MessageNew.Message.PeerId;
 
-                                if (user.UserLocation == 3)
+                                if (_user.UserLocation == 3)
                                 {
-                                    Sender.SendOrderKeyboard(vkApi, "Подтвердить заказ?", user, TypeKeyboard.OrderAccept);
-                                    user.UserLocation = 4;
+                                    Sender.SendOrderKeyboard(_vkApi, "Подтвердить заказ?", _user,
+                                        TypeKeyboard.OrderAccept);
+                                    _user.UserLocation = 4;
                                 }
-                                if (user.UserLocation == 2)
+
+                                if (_user.UserLocation == 2)
                                 {
-                                    if (int.TryParse(user.UserMessage, out int result))
+                                    if (int.TryParse(_user.UserMessage, out var result))
                                     {
-                                        if (0 < Convert.ToInt32(user.UserMessage) && Convert.ToInt32(user.UserMessage) < 11)
+                                        if (0 < Convert.ToInt32(_user.UserMessage) &&
+                                            Convert.ToInt32(_user.UserMessage) < 11)
                                         {
-                                            user.PhotoCount = result;
-                                            Sender.SendMessage(vkApi, StrPattern.OrderTz, user, true);
-                                            user.UserLocation = 3;
+                                            _user.PhotoCount = result;
+                                            Sender.SendMessage(_vkApi, StrPattern.OrderTz, _user, true);
+                                            _user.UserLocation = 3;
                                         }
                                     }
                                     else
                                     {
-                                        Sender.SendMessage(vkApi, "Пожалуйста, введите число 1 - 10", user, true);
+                                        Sender.SendMessage(_vkApi, "Пожалуйста, введите число 1 - 10", _user, true);
                                     }
                                 }
-                                switch (ivent.MessageNew.Message.Payload)
+
+                                switch (update.MessageNew.Message.Payload)
                                 {
                                     case "{\"command\":\"start\"}":
-                                        Sender.SendOrderKeyboard(vkApi, StrPattern.HelloBot, user);
-                                        user.UserLocation = 1;
+                                        Sender.SendOrderKeyboard(_vkApi, StrPattern.HelloBot, _user);
+                                        _user.UserLocation = 1;
                                         break;
                                 }
                             }
-                            if (ivent.Type == GroupUpdateType.MessageEvent)
-                            {
-                                user.PeerId = ivent.MessageEvent.PeerId!.Value;
-                                user.UserId = ivent.MessageEvent.UserId!.Value;
-                                user.EventId = ivent.MessageEvent.EventId;
 
-                                switch (ivent.MessageEvent.Payload)
+                            if (update.Type == GroupUpdateType.MessageEvent)
+                            {
+                                _user.PeerId = update.MessageEvent.PeerId!.Value;
+                                _user.UserId = update.MessageEvent.UserId!.Value;
+                                _user.EventId = update.MessageEvent.EventId;
+
+                                switch (update.MessageEvent.Payload)
                                 {
                                     case "1": //кнопка Заказа
-                                        Sender.SendAnswer(vkApi, user);
-                                        Sender.SendMessage(vkApi, StrPattern.OrderButtonClick, user, true);
-                                        user.UserLocation = 2;
+                                        Sender.SendAnswer(_vkApi, _user);
+                                        Sender.SendMessage(_vkApi, StrPattern.OrderButtonClick, _user, true);
+                                        _user.UserLocation = 2;
                                         break;
                                     case "2": //кнопка Подробнее
-                                        Sender.SendAnswer(vkApi, user);
-                                        Sender.SendMessage(vkApi, StrPattern.MoreButton, user);
+                                        Sender.SendAnswer(_vkApi, _user);
+                                        Sender.SendMessage(_vkApi, StrPattern.MoreButton, _user);
                                         break;
                                     case "3": //кнопка Подтвердить заказ
-                                        Sender.SendAnswer(vkApi, user);
-                                        Sender.SendMessage(vkApi, StrPattern.OrderAgree, user, true);
-                                        user.UserLocation = 5;
+                                        Sender.SendAnswer(_vkApi, _user);
+                                        Sender.SendMessage(_vkApi, StrPattern.OrderAgree, _user, true);
+                                        _user.UserLocation = 5;
                                         break;
                                     case "4": //кнопка Отказаться от заказа
-                                        Sender.SendAnswer(vkApi, user);
-                                        Sender.SendOrderKeyboard(vkApi, StrPattern.OrderDisAgree, user);
-                                        user.UserLocation = 1;
+                                        Sender.SendAnswer(_vkApi, _user);
+                                        Sender.SendOrderKeyboard(_vkApi, StrPattern.OrderDisAgree, _user);
+                                        _user.UserLocation = 1;
                                         break;
                                 }
                             }
                         });
-                    }
-
                 }
                 catch (LongPollKeyExpiredException)
                 {
-                    server = vkApi.Groups.GetLongPollServer(Data.GroupId);
+                    server = _vkApi.Groups.GetLongPollServer(Data.Data.GroupId);
                 }
-            }
         }
     }
 }

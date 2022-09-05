@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PhotoBotVk
+﻿namespace PhotoBotVk
 {
     public sealed class User
     {
@@ -15,7 +9,6 @@ namespace PhotoBotVk
         public long? PeerId { get; set; }
         public string EventId { get; set; }
         public int PhotoCount { get; set; }
-        public int UserLocation { get; set; } = 0;
-
+        public int UserLocation { get; set; }
     }
 }

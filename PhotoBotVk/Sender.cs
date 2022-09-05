@@ -1,27 +1,30 @@
-﻿using Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using PhotoBotVk.Data;
 using VkNet;
+using VkNet.Abstractions;
 using VkNet.Model.Keyboard;
 using VkNet.Model.RequestParams;
+using VkNet.Utils;
 
 namespace PhotoBotVk
 {
     internal static class Sender
     {
-        private static Random random = new Random();
-        public static void SendMessage(VkApi vkApi, string message, User user, bool keybordClear = false)
+        private static readonly Random random = new();
+
+        public static void SendMessage(VkApi vkApi, string message, User user, bool keyboardClear = false)
         {
-            if (keybordClear)
+            if (keyboardClear)
             {
-                var keybord = new KeyboardBuilder().Clear().Build();
+                var keyboard = new KeyboardBuilder().Clear().Build();
                 vkApi.Messages.Send(new MessagesSendParams
                 {
                     RandomId = random.Next(),
                     UserId = user.UserId,
                     PeerId = user.PeerId,
                     Message = message,
-                    Keyboard = keybord,
+                    Keyboard = keyboard
                 });
             }
             else
@@ -31,41 +34,53 @@ namespace PhotoBotVk
                     RandomId = random.Next(),
                     UserId = user.UserId,
                     PeerId = user.PeerId,
-                    Message = message,
+                    Message = message
                 });
             }
         }
-        public static long? SendOrderKeyboard(VkApi vkApi, string message, User user, TypeKeyboard typeKeyboard = TypeKeyboard.OrderBoard, bool keybordClear = false)
+
+        public static long? SendOrderKeyboard(VkApi vkApi, string message, User user,
+            TypeKeyboard typeKeyboard = TypeKeyboard.OrderBoard, bool keyboardClear = false)
         {
-            if (keybordClear)
+            if (keyboardClear)
             {
-                var keybord = new KeyboardBuilder().Clear().Build();
+                var keyboard = new KeyboardBuilder().Clear().Build();
                 return vkApi.Messages.Send(new MessagesSendParams
                 {
                     RandomId = random.Next(),
                     UserId = user.UserId,
                     PeerId = user.PeerId,
                     Message = message,
-                    Keyboard = keybord,
-                });
-            }
-            else
-            {
-                return vkApi.Messages.Send(new MessagesSendParams
-                {
-                    RandomId = random.Next(),
-                    UserId = user.UserId,
-                    PeerId = user.PeerId,
-                    Message = message,
-                    Keyboard = typeKeyboard == TypeKeyboard.OrderBoard ? Keys.orderKeyboard : Keys.orderAcceptKeyboard,
+                    Keyboard = keyboard
                 });
             }
 
+            return vkApi.Messages.Send(new MessagesSendParams
+            {
+                RandomId = random.Next(),
+                UserId = user.UserId,
+                PeerId = user.PeerId,
+                Message = message,
+                Keyboard = typeKeyboard == TypeKeyboard.OrderBoard ? Keys.OrderKeyboard : Keys.OrderAcceptKeyboard
+            });
         }
-        public static void DeleteMessage(VkApi vkApi, long? randomId)
+
+        public static void DeleteMessage(IVkApi api,
+            IEnumerable<long> messageIds,
+            long peerId, 
+            bool deleteForAll = true,
+            bool spam = false)
         {
-            vkApi.Messages.Delete(new List<ulong> { (ulong) randomId }, deleteForAll:true);
+            var parameters = new Dictionary<string, string>
+            {
+                { "message_ids", string.Join(',', messageIds ?? Array.Empty<long>()) },
+                { "peer_id", peerId.ToString() },
+                { "spam", Convert.ToInt32(spam).ToString() },
+                { "delete_for_all", Convert.ToInt32(deleteForAll).ToString() }
+            };
+            api.Call("messages.delete", new VkParameters(parameters));
         }
+
         public static void SendAnswer(VkApi vkApi, User user)
         {
             vkApi.Messages.SendMessageEventAnswer(user.EventId, (long)user.PeerId, (long)user.PeerId);

@@ -4,7 +4,7 @@ namespace PhotoBotVk
 {
     internal sealed class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -12,8 +12,9 @@ namespace PhotoBotVk
                 photoBot.StartMessageHandling();
             }
             catch (Exception ex)
-            { Console.WriteLine(ex.Message); }
-
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
