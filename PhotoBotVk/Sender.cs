@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using PhotoBotVk.Data;
 using VkNet;
 using VkNet.Abstractions;
+using VkNet.Model.Attachments;
 using VkNet.Model.Keyboard;
 using VkNet.Model.RequestParams;
 using VkNet.Utils;
@@ -65,9 +66,9 @@ namespace PhotoBotVk
             });
         }
 
-        public static void DeleteMessage(IVkApi api,
+        public static void DeleteMessage(IVkApi vkApi,
             IEnumerable<long> messageIds,
-            long peerId, 
+            long peerId,
             bool deleteForAll = true,
             bool spam = false)
         {
@@ -78,12 +79,23 @@ namespace PhotoBotVk
                 { "spam", Convert.ToInt32(spam).ToString() },
                 { "delete_for_all", Convert.ToInt32(deleteForAll).ToString() }
             };
-            api.Call("messages.delete", new VkParameters(parameters));
+            vkApi.Call("messages.delete", new VkParameters(parameters));
         }
 
         public static void SendAnswer(VkApi vkApi, User user)
         {
             vkApi.Messages.SendMessageEventAnswer(user.EventId, (long)user.PeerId, (long)user.PeerId);
         }
+        //public static void SendOrder(VkApi vkApi, string message, long userId, Order order)
+        //{
+        //    _ = vkApi.Messages.Send(new MessagesSendParams
+        //    {
+        //        UserId = userId,
+        //        PeerId = userId,
+        //        Message = $"{message}: Номер заказа - {order.OrderId}\nЗаказчик: {order.UserId}" +
+        //        $"\nОписание заказа:{order.OrderMessage}\nНавар))):{order.Price}",
+        //        Attachments = new List<MediaAttachment> { order.OrderProductPhoto }
+        //    });
+        //}
     }
 }

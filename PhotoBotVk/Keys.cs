@@ -6,11 +6,11 @@ namespace PhotoBotVk
     internal static class Keys
     {
         public static readonly MessageKeyboard OrderKeyboard = new KeyboardBuilder().AddButton(new MessageKeyboardButtonAction
-            {
-                Type = KeyboardButtonActionType.Callback,
-                Label = "Сделать заказ",
-                Payload = "1" //кнопка сделать заказ Payload = 1 
-            }, KeyboardButtonColor.Primary)
+        {
+            Type = KeyboardButtonActionType.Callback,
+            Label = "Сделать заказ",
+            Payload = "1" //кнопка сделать заказ Payload = 1 
+        }, KeyboardButtonColor.Primary)
             .AddLine()
             .AddButton(new MessageKeyboardButtonAction
             {
