@@ -9,7 +9,7 @@ namespace PhotoBotVk
         public int OrderId { get; set; }
         public string OrderMessage { get; set; }
         public ReadOnlyCollection<MediaAttachment> OrderProductPhoto { get; set; }
-        public string UserLick { get; set; }
+        public string UserLink { get; set; }
         public long? UserId { get; set; }
         public long? PeerId { get; set; }
         public int Price { get; set; }
@@ -21,7 +21,7 @@ namespace PhotoBotVk
             OrderProductPhoto = null;
             UserId = 0;
             PeerId = 0;
-            UserLick = string.Empty;
+            UserLink = string.Empty;
         }
     }
 }

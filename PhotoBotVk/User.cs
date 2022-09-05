@@ -4,7 +4,7 @@
     {
         public string UserName { get; set; }
         public string Message { get; set; }
-        public string Lick { get; set; }
+        public string Link { get; set; }
         public long? UserId { get; set; }
         public long? PeerId { get; set; }
         public long? TempPeerId { get; set; }
