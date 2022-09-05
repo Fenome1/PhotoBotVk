@@ -73,7 +73,7 @@ namespace PhotoBotVk
         {
             var parameters = new Dictionary<string, string>
             {
-                { "message_ids", string.Join(',', messageIds ?? Array.Empty<long>()) },
+                { "message_ids", string.Join(',', messageIds) },
                 { "peer_id", peerId.ToString() },
                 { "spam", Convert.ToInt32(spam).ToString() },
                 { "delete_for_all", Convert.ToInt32(deleteForAll).ToString() }
